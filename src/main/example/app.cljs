@@ -17,26 +17,7 @@
 
 (def styles
   ^js (-> {:container
-           {:flex 1
-            :backgroundColor "#fff"
-            :alignItems "center"
-            :justifyContent "center"}
-           :title
-           {:fontWeight "bold"
-            :fontSize 24
-            :color "blue"}
-           :button
-           {:fontWeight "bold"
-            :fontSize 18
-            :padding 6
-            :backgroundColor "blue"
-            :borderRadius 10}
-           :buttonText
-           {:paddingLeft 12
-            :paddingRight 12
-            :fontWeight "bold"
-            :fontSize 18
-            :color "white"}
+           {:backgroundColor "#fff"}
            :label
            {:fontWeight "normal"
             :fontSize 15
@@ -44,16 +25,43 @@
           (clj->js)
           (rn/StyleSheet.create)))
 
+(defn dragger []
+  (let [counter @(rf/subscribe [:get-counter])
+        state (r/atom {:dragger-coords {:left 100 :top 100}
+                       :dragger-old-coords {:left 100 :top 100}})
+        responder (.create
+                   rn/PanResponder
+                   #js {:onStartShouldSetPanResponder (fn [_ _] true)
+                        :onMoveShouldSetPanResponder (fn [_ _] true)
+                        :onPanResponerGrant (fn [_ _] true)
+                        :onPanResponderMove
+                        (fn [_ gesture]
+                          (let [g (js->clj gesture :keywordize-keys true)
+                                {:keys [dx dy]} g
+                                {:keys [left top]} (:dragger-old-coords @state)]
+                            (rf/dispatch [:inc-counter])
+                            (swap! state assoc :dragger-coords {:left (+ left dx) :top (+ top dy)})))
+                        :onPanResponderRelease
+                        (fn [_ _]
+                          (swap! state assoc :dragger-old-coords (:dragger-coords @state)))})
+        pan-handlers (:panHandlers (js->clj responder :keywordize-keys true))]
+    (fn []
+      [:> rn/View (merge pan-handlers
+                         {:style
+                          (merge (:dragger-coords @state)
+                                 {:backgroundColor "red"
+                                  :width 50
+                                  :height 50
+                                  :borderRadius 25})})])))
+
 (defn root []
   (let [counter (rf/subscribe [:get-counter])]
     (fn []
-      [:> rn/View {:style (.-container styles)}
-       [:> rn/Text {:style (.-title styles)} "Clicked: " @counter]
-       [:> rn/TouchableOpacity {:style (.-button styles)
-                                :on-press #(rf/dispatch [:inc-counter])}
-        [:> rn/Text {:style (.-buttonText styles)} "Click me, I'll count"]]
-       [:> rn/Image {:source splash-img :style {:width 200 :height 200}}]
-       [:> rn/Text {:style (.-label styles)} "Using: shadow-cljs+expo+reagent+re-frame"]])))
+      [:> rn/View {:top 50 :left 50}
+       [:> rn/Text {:style (.-label styles)}
+        @(rf/subscribe [:get-counter])]
+       [:> rn/View {:style (.-container styles)}
+        [dragger]]])))
 
 (defn start
   {:dev/after-load true}
