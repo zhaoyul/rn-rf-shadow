@@ -108,20 +108,20 @@
     (if-not (re-matches #"^1\d{10}" phoneNum)
       (toastError "请输入正确的手机号")
       (when (empty? captcha)
-        (toastError "请填写验证码"))
+        (toastError "请填写验证码")))
+    (rf/dispatch [:login {
+                          :openId nil
+                          :ticket {:isTrusted true},
+                          :randstr "",
+                          :sourcePage "https://webt.rrs.com/pages/home/personal.html?t=15826320"
+                          :orderId "",
+                          :recmdMobile recmdMobil,
+                          :thirdpartyType "",
+                          :thirdpartyId "",
+                          :mobile phoneNum,
+                          :verifycode captcha
+                          }])))
 
-      (rf/dispatch [:login {
-                            :openId nil
-                            :ticket {:isTrusted true},
-                            :randstr "",
-                            :sourcePage "https//webt.rrs.com/pages/home/personal.html?t=15826320",
-                            :orderId "",
-                            :recmdMobile recmdMobil,
-                            :thirdpartyType "",
-                            :thirdpartyId "",
-                            :mobile phoneNum,
-                            :verifycode captcha
-                            }]))))
 
 (defn- inviterLabel []
   (let [{:keys [showInviter] } @state]
@@ -173,7 +173,7 @@
                                        (prn text)
                                        (swap! state assoc :captcha text))}]
      [:> rn/TouchableOpacity
-      {:disabled (:isTiming @state)
+      {:disabled @(rf/subscribe [:is-timing?])
        :style    (.-get_captcha styles)
        :onPress  handleVerifycode
        :hitSlop #js { :top 10, :bottom 10, :left 20, :right 20 }}

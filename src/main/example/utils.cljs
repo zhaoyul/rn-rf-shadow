@@ -17,7 +17,7 @@
  :http
  (fn [{:keys [url method opts on-success on-failure]}]
    (go
-     (prn "opts:" opts)
+     (prn "开始网络请求:" method url "opts:" opts)
      (let [http-fn (case method
                      :post http/post
                      :get http/get

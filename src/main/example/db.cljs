@@ -18,5 +18,4 @@
 
 
 ;; initial state of app-db
-(defonce app-db {:login {:time-left 0
-                         :is-timing? false}})
+(defonce app-db {:login {:time-left 0}})
